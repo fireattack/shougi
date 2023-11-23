@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Million Shougi</title>
+    <script src="//cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script type="text/javascript" src="//code.jquery.com/jquery-1.11.1.js"></script>
+    <style>
+        body {
+            font-family: sans-serif;
+            text-align: center;
+        }
+        #game-board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-template-rows: repeat(4, 100px);
+            grid-gap: 5px;
+            justify-content: center;
+            margin: auto;
+        }
+
+        #faction-choice-container {
+            text-align: center;
+            height: 100px;
+        }
+
+        @keyframes rainbow {
+            0% { background-color: red; }
+            15% { background-color: orange; }
+            30% { background-color: yellow; }
+            45% { background-color: green; }
+            60% { background-color: blue; }
+            75% { background-color: indigo; }
+            90% { background-color: violet; }
+            100% { background-color: red; }
+        }
+
+        .rainbow-effect {
+            animation: rainbow 3s infinite;
+        }
+
+        button {
+            background-color: #4CAF50; /* Green background */
+            color: white; /* White text */
+            padding: 15px 32px; /* Top and bottom, Left and right padding */
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px; /* Rounded corners */
+            box-shadow: 0 4px #999; /* Shadow effect for depth */
+        }
+
+        button:hover {
+            background-color: #45a049; /* Darker shade for hover */
+        }
+
+        button:active {
+            background-color: #45a049;
+            box-shadow: 0 2px #666; /* Shadow effect for active state */
+            transform: translateY(4px); /* Slight push down */
+        }
+
+
+        .status {
+            text-align: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            margin: 10px;
+            /* maintain its height even when empty */
+            min-height: 1.5em;
+        }
+
+        .cell {
+            width: 100px;
+            height: 100px;
+            border: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f0f0f0;
+        }
+
+        .cell:nth-child(odd) {
+            background-color: #e0e0e0;
+        }
+
+        .cell.selected {
+            background-color: #ff0;
+        }
+
+        .piece {
+            width: 80px;
+            height: 80px;
+            border-radius: 10%;
+            border: 2px solid black;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.5em;
+        }
+
+        .x-piece {
+            border: 2px solid black;
+            transform: scaleY(-1);
+        }
+
+        .o-piece {
+            border: 2px solid red;
+        }
+
+        .type1 {
+            background-color: blue;
+        }
+
+        .type2 {
+            background-color: purple;
+        }
+
+        .type3 {
+            background-color: green;
+        }
+
+        .type4 {
+            background-color: orange;
+        }
+        .type5 {
+            background-color: gold;
+            box-shadow: 0 0 3px 2px #ffd700;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>ミリオンしょうぎ</h1>
+
+    <div class="status", id="faction-status"></div>
+    <div id="faction-choice-container">
+        <div id="faction-choice">
+            <button id="choose-x">山側 (↑)</button>
+            <button id="choose-o">海側 (↓)</button>
+        </div>
+    </div>
+
+    <div id="game-board">
+        <div class="cell" data-row=0 data-col=0></div>
+        <div class="cell" data-row=0 data-col=1></div>
+        <div class="cell" data-row=0 data-col=2></div>
+        <div class="cell" data-row=1 data-col=0></div>
+        <div class="cell" data-row=1 data-col=1></div>
+        <div class="cell" data-row=1 data-col=2></div>
+        <div class="cell" data-row=2 data-col=0></div>
+        <div class="cell" data-row=2 data-col=1></div>
+        <div class="cell" data-row=2 data-col=2></div>
+        <div class="cell" data-row=3 data-col=0></div>
+        <div class="cell" data-row=3 data-col=1></div>
+        <div class="cell" data-row=3 data-col=2></div>
+    </div>
+
+    <div class="status", id="game-status"></div>
+    <div class="status", id="game-status2"></div>
+    <button id="reset-button">Reset Game</button>
+
+
+    <script>
+        function updateGameState(gameState) {
+            // Clear the board
+            $('.cell').empty();
+
+            names = {
+                1: 'rook',
+                2: 'king',
+                3: 'bishop',
+                4: 'pawn',
+                5: 'pawn'
+            }
+
+            sides = {
+                'X': '山側 (↑)',
+                'O': '海側 (↓)'
+            }
+
+            // Populate the board based on gameState
+            gameState.board.forEach((row, rowIndex) => {
+                row.forEach((cell, colIndex) => {
+                    if (cell) {
+                        var cellSelector = `[data-row="${rowIndex}"][data-col="${colIndex}"]`;
+                        var pieceClass = (cell.faction === 'X' ? 'x-piece' : 'o-piece') + ' type' + cell.type;
+                        var imageUrl = 'static/' + names[cell.type] + (cell.faction === 'X' ? '0' : '1') + '.png';
+                        $(cellSelector).append('<img class="piece '  + pieceClass + '" src="' + imageUrl + '"/>');
+                    }
+                });
+            });
+            // Update game status
+            current_player = gameState.current_player;
+            if (player) {
+                if (current_player == player) {
+                    updateStatus('Your turn!', '#00ff00');
+                } else {
+                    updateStatus('Opponent\'s turn!','#ff0000');
+                }
+            }
+            else {
+                updateStatus('Current turn: ' + sides[current_player], '#ffff00');
+            }
+
+            game_over = gameState.game_over;
+            if (game_over) {
+                var message = 'Game Over!';
+                if (gameState.winner) {
+                    message += ' ' + sides[gameState.winner] + ' wins!'
+                } else {
+                    message += 'It\'s a draw!';
+                }
+                updateStatus(message, 'rainbow');
+            }
+
+        }
+
+        // Function to update game status
+        function updateStatus(message, color) {
+            $('#game-status').text(message);
+            if (color === 'rainbow') {
+                $('#game-status').css('background-color', 'white');
+                $('#game-status').addClass('rainbow-effect');
+            }
+            else {
+                $('#game-status').css('background-color', color);
+                $('#game-status').removeClass('rainbow-effect');
+            }
+        }
+
+        function updateStatus2(message) {
+            $('#game-status2').text(message);
+        }
+        // http://' + document.domain + ':' + location.port
+        var socket = io.connect({"path": location.pathname + "socket.io"});
+        var selectedCell = null;
+        var player = null;
+        var current_player = null;
+        var game_over = false; // Initialize game_over as false
+
+        $('.cell').on('click', function () {
+            if (!player) {
+                updateStatus2('Please choose a faction first!');
+                return;
+            }
+
+            if (player !== current_player) {
+                updateStatus2('Not your turn!');
+                return;
+            }
+
+            if (game_over) {
+                updateStatus2("Game was already over. Please reset the game.")
+                return;
+            }
+            updateStatus2('You clicked on' + ' ' + $(this).data('row') + ' ' +  $(this).data('col'));
+            if (selectedCell) {
+                if (this === selectedCell) {
+                    $(this).removeClass('selected');
+                    selectedCell = null;
+                    return;
+                }
+                // Send the move to the server
+                socket.emit('make_move', {
+                    src: { row: $(selectedCell).data('row'), col: $(selectedCell).data('col') },
+                    dst: { row: $(this).data('row'), col: $(this).data('col') },
+                    player: player
+                });
+                $(selectedCell) .removeClass('selected');
+                selectedCell = null;
+            } else {
+                selectedCell = this;
+                $(this).addClass('selected');
+            }
+        });
+
+        $('#reset-button').on('click', function () {
+            socket.emit('reset_game');
+        });
+
+        socket.on('game_state', function (gameState) {
+            updateGameState(gameState);
+        });
+
+
+        socket.on('move_error', function (error) {
+            updateStatus2('Invalid move', error.message);
+            // change status2 back to blank after 2 seconds
+            setTimeout(function () {
+                updateStatus2('');
+            }, 2000);
+        });
+
+        $(document).ready(function () {
+            socket.emit('request_initial_state');
+            $('#faction-status').text('You are observing. Please choose a faction to play:');
+            $('#choose-x').on('click', function () {
+                player = 'X';
+                $('#faction-status').text('You are 山側 (↑)');
+                $('#faction-choice').hide();
+                socket.emit('request_initial_state');
+            });
+
+            $('#choose-o').on('click', function () {
+                player = 'O';
+                $('#faction-status').text('You are 海側 (↓)');
+                $('#faction-choice').hide();
+                socket.emit('request_initial_state');
+            });
+
+        });
+
+    </script>
+</body>
+
+</html>
