@@ -174,11 +174,14 @@ def make_move(src, dst, game_state):
     if dst_piece:
         assert dst_piece['faction'] != game_state['current_player']
         dst_piece['faction'] = game_state['current_player']
-        # Place the captured piece in the reserve
-        row_no = 4 if game_state['current_player'] == 'X' else 5
-        for i in range(5):
-            if game_state['board'][row_no][i] is None:
-                game_state['board'][row_no][i] = dst_piece
+        # downgrade type5 to type4, if it is captured
+        if dst_piece['type'] == '5':
+            dst_piece['type'] = '4'
+        # Place the captured piece in the first empty cell in the reserve
+        reserve = game_state['board'][4] if game_state['current_player'] == 'X' else game_state['board'][5]
+        for i in range(len(reserve)):
+            if reserve[i] is None:
+                reserve[i] = dst_piece
                 break
 
     # upgrade type4 to type5, if it reaches the other side
