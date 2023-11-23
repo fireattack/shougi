@@ -49,19 +49,32 @@ def initialize_game_state():
     # Create an empty 3x4 board
     # Represent the board as a 2D list, each cell can be None or a dictionary with piece info
     board = [[None for _ in range(3)] for _ in range(4)]
+    # reserves
+    board.append([None for _ in range(5)])
+    board.append([None for _ in range(5)])
 
     # Define initial positions for the pieces
     # Top faction (X) pieces
-    board[0][0] = {'type': '1', 'faction': 'X'}
-    board[0][1] = {'type': '2', 'faction': 'X'}
-    board[0][2] = {'type': '3', 'faction': 'X'}
-    board[1][1] = {'type': '4', 'faction': 'X'}
+
+    names = {
+        1: 'rook',
+        2: 'king',
+        3: 'bishop',
+        4: 'pawn',
+        5: 'pawn (U)'
+    }
+
+    board[0][0] = {'type': '1', 'faction': 'X', 'img': 'rook0.png'}
+    board[0][1] = {'type': '2', 'faction': 'X', 'img': 'king0.png'}
+    board[0][2] = {'type': '3', 'faction': 'X', 'img': 'bishop0.png'}
+    board[1][1] = {'type': '4', 'faction': 'X', 'img': 'pawn0.png'}
 
     # Bottom faction (O) pieces
-    board[2][1] = {'type': '4', 'faction': 'O'}
-    board[3][0] = {'type': '3', 'faction': 'O'}
-    board[3][1] = {'type': '2', 'faction': 'O'}
-    board[3][2] = {'type': '1', 'faction': 'O'}
+    board[3][2] = {'type': '1', 'faction': 'O', 'img': 'rook1.png'}
+    board[3][1] = {'type': '2', 'faction': 'O', 'img': 'king1.png'}
+    board[3][0] = {'type': '3', 'faction': 'O', 'img': 'bishop1.png'}
+    board[2][1] = {'type': '4', 'faction': 'O', 'img': 'pawn1.png'}
+
 
     # Other game state variables
     game_state = {
@@ -91,8 +104,17 @@ def is_valid_move(src, dst, player, game_state):
 
     # Check if the source cell contains the player's piece
     src_piece = game_state['board'][src_row][src_col]
-    if not src_piece or src_piece['faction'] != player:
-        return False
+    dst_piece = game_state['board'][dst_row][dst_col]
+
+    if not src_piece:
+        return 'There is no piece to move'
+    if src_piece['faction'] != player:
+        return 'You cannot move opponent\'s piece'
+
+    if src_row in [4, 5]:
+        if dst_piece:
+            return 'You cannot replace a piece on occupied cell'
+        return True
 
     # Calculate row and column differences
     row_diff = dst_row - src_row
@@ -102,40 +124,38 @@ def is_valid_move(src, dst, player, game_state):
     if src_piece['type'] == '1':
         # Type 1 can move in all straight directions by 1
         if abs(row_diff) + abs(col_diff) != 1:
-            return False
+            return 'Invalid move for rook'
 
     elif src_piece['type'] == '2':
         # Type 2 can move in all 8 directions by 1
         if abs(row_diff) > 1 or abs(col_diff) > 1:
-            return False
+            return 'Invalid move for king'
 
     elif src_piece['type'] == '3':
         # Type 3 can move in all 4 diagonal directions by 1
         if abs(row_diff) != 1 or abs(col_diff) != 1:
-            return False
+            return 'Invalid move for bishop'
 
     elif src_piece['type'] == '4':
         # Type 4 can only move forward (down for X, up for O) by 1
         if player == 'X' and row_diff != 1:
-            return False
+            return 'Invalid move for pawn'
         elif player == 'O' and row_diff != -1:
-            return False
+            return 'Invalid move for pawn'
         elif col_diff != 0:
-            return False
+            return 'Invalid move for pawn'
     elif src_piece['type'] == '5':
         # Type 5 can move forward, forward diagonal, left, right and backward (but not backward diagonal) by 1
         if player == 'X' and row_diff == -1 and col_diff != 0:
-            return False
+            return 'Invalid move for upgraded pawn'
         elif player == 'O' and row_diff == 1 and col_diff != 0:
-            return False
+            return 'Invalid move for upgraded pawn'
         elif abs(row_diff) > 1 or abs(col_diff) > 1:
-            return False
+            return 'Invalid move for upgraded pawn'
 
     # Check if the destination cell is not occupied by a friendly piece
-    dst_piece = game_state['board'][dst_row][dst_col]
     if dst_piece and dst_piece['faction'] == player:
-        return False
-
+        return 'You cannot capture your own piece'
     return True
 
 def make_move(src, dst, game_state):
@@ -147,32 +167,32 @@ def make_move(src, dst, game_state):
     # Move the piece from src to dst
     piece = game_state['board'][src_row][src_col]
 
+    # Get the piece at the destination cell
+    dst_piece = game_state['board'][dst_row][dst_col]
+    # If the destination cell has an opponent's piece, it is captured
+    if dst_piece:
+        assert dst_piece['faction'] != game_state['current_player']
+        dst_piece['faction'] = game_state['current_player']
+        # Place the captured piece in the reserve
+        row_no = 4 if game_state['current_player'] == 'X' else 5
+        for i in range(5):
+            if game_state['board'][row_no][i] is None:
+                game_state['board'][row_no][i] = dst_piece
+                break
+
     # upgrade type4 to type5, if it reaches the other side
-    if piece['type'] == '4' and dst_row == 3 and piece['faction'] == 'X':
-        piece['type'] = '5'
-    elif piece['type'] == '4' and dst_row == 0 and piece['faction'] == 'O':
+    if piece['type'] == '4' and src_row not in [4, 5] and \
+        (dst_row == 3 and piece['faction'] == 'X') or \
+        (dst_row == 0 and piece['faction'] == 'O'):
         piece['type'] = '5'
 
     game_state['board'][dst_row][dst_col] = piece
     game_state['board'][src_row][src_col] = None
 
-
 def switch_turns(game_state):
     current_player = game_state['current_player']
     game_state['current_player'] = 'O' if current_player == 'X' else 'X'
 
-
-def check_for_capture(dst, game_state):
-    dst_row = dst['row']
-    dst_col = dst['col']
-
-    # Get the piece at the destination cell
-    dst_piece = game_state['board'][dst_row][dst_col]
-
-    # If the destination cell has an opponent's piece, it is captured
-    if dst_piece and dst_piece['faction'] != game_state['current_player']:
-        # Remove the captured piece from the board
-        game_state['board'][dst_row][dst_col] = None
 
 # Socket event for resetting the game
 @socketio.on('reset_game')
@@ -189,9 +209,9 @@ def handle_make_move(data):
     dst = data['dst']
     player = data['player']
 
-    if is_valid_move(src, dst, player, game_state):
+    validality = is_valid_move(src, dst, player, game_state)
+    if validality == True:
         make_move(src, dst, game_state)
-        check_for_capture(dst, game_state)
         winner = check_winner(game_state)
         if winner:
             game_state['game_over'] = True
@@ -201,7 +221,7 @@ def handle_make_move(data):
         emit('game_state', game_state, broadcast=True)
     else:
         # Optionally send an error message back to the player
-        emit('move_error', {'message': 'Invalid move'})
+        emit('move_error', {'message': validality})
 
 @socketio.on('request_initial_state')
 def handle_initial_state_request():
