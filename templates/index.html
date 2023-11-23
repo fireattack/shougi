@@ -17,23 +17,44 @@
             text-align: center;
         }
 
-        .reserve {
+        .board {
             display: grid;
-            grid-template-columns: repeat(5, var(--size));
-            grid-template-rows: repeat(1, var(--size));
             grid-gap: 5px;
             justify-content: center;
             margin: auto;
-            padding: 20px;
         }
 
         #game-board {
-            display: grid;
             grid-template-columns: repeat(3, var(--size));
             grid-template-rows: repeat(4, var(--size));
-            grid-gap: 5px;
+        }
+
+        .reserve {
+            grid-template-columns: repeat(5, var(--size));
+            grid-template-rows: repeat(1, var(--size));
+            padding: 20px;
+        }
+
+        .cell {
+            width: var(--size);
+            height: var(--size);
+            border: 1px solid #ddd;
+            display: flex;
+            align-items: center;
             justify-content: center;
-            margin: auto;
+            background-color: #f0f0f0;
+        }
+
+        .cell:nth-child(odd) {
+            background-color: #e0e0e0;
+        }
+
+        .cell.selected {
+            background-color: #ff0;
+        }
+
+        .cell.valid {
+            background-color: #0f0;
         }
 
         #faction-choice-container {
@@ -106,58 +127,19 @@
             transform: scaleY(-1);
         }
 
-
+        .type5 {
+            box-shadow: 0 0 3px 2px gold;
+        }
 
         .status {
             text-align: center;
             font-size: 1.5em;
             font-weight: bold;
             margin: 10px;
-            /* maintain its height even when empty */
-            min-height: 1.5em;
+            min-height: 1.5em; /* maintain its height even when empty */
         }
 
-        .cell {
-            width: var(--size);
-            height: var(--size);
-            border: 1px solid #ddd;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-color: #f0f0f0;
-        }
 
-        .cell:nth-child(odd) {
-            background-color: #e0e0e0;
-        }
-
-        .cell.selected {
-            background-color: #ff0;
-        }
-
-        .cell.valid {
-            background-color: #0f0;
-        }
-
-        .type1 {
-            background-color: blue;
-        }
-
-        .type2 {
-            background-color: purple;
-        }
-
-        .type3 {
-            background-color: green;
-        }
-
-        .type4 {
-            background-color: orange;
-        }
-        .type5 {
-            background-color: gold;
-            box-shadow: 0 0 3px 2px #ffd700;
-        }
     </style>
 </head>
 
@@ -172,7 +154,7 @@
         </div>
     </div>
 
-    <div id="reserve-x" class="reserve">
+    <div id="reserve-x" class="board reserve">
         <div class="cell" data-row=4 data-col=0></div>
         <div class="cell" data-row=4 data-col=1></div>
         <div class="cell" data-row=4 data-col=2></div>
@@ -180,7 +162,7 @@
         <div class="cell" data-row=4 data-col=4></div>
     </div>
 
-    <div id="game-board">
+    <div class="board" id="game-board">
         <div class="cell" data-row=0 data-col=0></div>
         <div class="cell" data-row=0 data-col=1></div>
         <div class="cell" data-row=0 data-col=2></div>
@@ -195,7 +177,7 @@
         <div class="cell" data-row=3 data-col=2></div>
     </div>
 
-    <div id="reserve-o" class="reserve">
+    <div id="reserve-o" class="board reserve">
         <div class="cell" data-row=5 data-col=0></div>
         <div class="cell" data-row=5 data-col=1></div>
         <div class="cell" data-row=5 data-col=2></div>
@@ -212,7 +194,7 @@
         function updateGameState(gameState) {
             console.log(gameState);
 
-            names = {
+            let names = {
                 1: 'rook',
                 2: 'king',
                 3: 'bishop',
@@ -220,11 +202,10 @@
                 5: 'pawn'
             }
 
-            sides = {
+            let sides = {
                 'X': '山側 (↑)',
                 'O': '海側 (↓)'
             }
-
             // Populate the board based on gameState
             $('.cell').empty();
             gameState.board.forEach((row, rowIndex) => {
@@ -296,15 +277,15 @@
                 return;
             }
 
+            if (game_over) {
+                updateStatus2("Game was already over. Please reset the game.")
+                return;
+            }
             if (player !== current_player) {
                 updateStatus2('Not your turn!');
                 return;
             }
 
-            if (game_over) {
-                updateStatus2("Game was already over. Please reset the game.")
-                return;
-            }
             updateStatus2('You clicked on' + ' ' + $(this).data('row') + ' ' +  $(this).data('col'));
             if (selectedCell) {
                 if (this === selectedCell) {
