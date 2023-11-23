@@ -20,20 +20,21 @@ def check_winner(game_state):
     x_king_exists = False
     o_king_exists = False
 
-    # Check if the king is captured
-    for row in game_state['board']:
+    # Check if the king is captured or reached the other side
+    for row_index in range(4):
+        row = game_state['board'][row_index]
         for cell in row:
             if cell and cell['type'] == '2':
                 if cell['faction'] == 'X':
-                    # if X king is at the bottom row in the opponent's turn, X wins
-                    if row == 3 and game_state['current_player'] == 'O':
+                    # if X king is at the bottom row after opponent's turn finishes, X wins
+                    if row_index == 3 and game_state['current_player'] == 'O':
                         return 'X'
                     x_king_exists = True
                 elif cell['faction'] == 'O':
-                    if row == 0 and game_state['current_player'] == 'X':
+                    if row_index == 0 and game_state['current_player'] == 'X':
                         return 'O'
                     o_king_exists = True
-    # Determine the winner based on the number of pieces remaining
+    # Determine the winner based on if the king remains on the board
     if not x_king_exists:
         return 'O'
     elif not o_king_exists:
@@ -182,8 +183,7 @@ def make_move(src, dst, game_state):
 
     # upgrade type4 to type5, if it reaches the other side
     if piece['type'] == '4' and src_row not in [4, 5] and \
-        (dst_row == 3 and piece['faction'] == 'X') or \
-        (dst_row == 0 and piece['faction'] == 'O'):
+        ((dst_row == 3 and piece['faction'] == 'X') or (dst_row == 0 and piece['faction'] == 'O')):
         piece['type'] = '5'
 
     game_state['board'][dst_row][dst_col] = piece
