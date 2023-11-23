@@ -1,6 +1,5 @@
 from flask import Flask, render_template
 from flask_socketio import SocketIO, emit
-
 from flask_cors import CORS
 
 app = Flask(__name__)
@@ -12,7 +11,7 @@ game_state = {}
 
 @app.route('/')
 def index():
-    return render_template('index.html')  # Render the Tic-Tac-Toe HTML page
+    return render_template('index.html')
 
 def check_winner(game_state):
     # Type 2 is the king.
@@ -159,6 +158,15 @@ def is_valid_move(src, dst, player, game_state):
         return 'You cannot capture your own piece'
     return True
 
+def get_valid_moves(src, player, game_state):
+    valid_targets = []
+    for row in range(4):
+        for col in range(3):
+            dst = {'row': row, 'col': col}
+            if is_valid_move(src, dst, player, game_state) == True:
+                valid_targets.append(dst)
+    return valid_targets
+
 def make_move(src, dst, game_state):
     src_row = src['row']
     src_col = src['col']
@@ -184,10 +192,12 @@ def make_move(src, dst, game_state):
                 reserve[i] = dst_piece
                 break
 
-    # upgrade type4 to type5, if it reaches the other side
-    if piece['type'] == '4' and src_row not in [4, 5] and \
-        ((dst_row == 3 and piece['faction'] == 'X') or (dst_row == 0 and piece['faction'] == 'O')):
-        piece['type'] = '5'
+    # upgrade pawn, when it goes from 3rd row to 4th row
+    if piece['type'] == '4':
+        if piece['faction'] == 'X' and dst_row == 3 and src_row == 2:
+            piece['type'] = '5'
+        if piece['faction'] == 'O' and dst_row == 0 and src_row == 1:
+            piece['type'] = '5'
 
     game_state['board'][dst_row][dst_col] = piece
     game_state['board'][src_row][src_col] = None
@@ -230,6 +240,13 @@ def handle_make_move(data):
 def handle_initial_state_request():
     # Assuming game_state is your global or accessible game state variable
     emit('game_state', game_state)
+
+@socketio.on('get_valid_moves')
+def handle_get_valid_moves(data):
+    src = data['src']
+    player = data['player']
+    valid_moves = get_valid_moves(src, player, game_state)
+    emit('valid_moves', valid_moves)
 
 if __name__ == '__main__':
     socketio.run(app, debug=True, port=5000)
