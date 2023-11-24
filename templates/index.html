@@ -63,14 +63,37 @@
         }
 
         @keyframes rainbow {
-            0% { background-color: red; }
-            15% { background-color: orange; }
-            30% { background-color: yellow; }
-            45% { background-color: green; }
-            60% { background-color: blue; }
-            75% { background-color: indigo; }
-            90% { background-color: violet; }
-            100% { background-color: red; }
+            0% {
+                background-color: red;
+            }
+
+            15% {
+                background-color: orange;
+            }
+
+            30% {
+                background-color: yellow;
+            }
+
+            45% {
+                background-color: green;
+            }
+
+            60% {
+                background-color: blue;
+            }
+
+            75% {
+                background-color: indigo;
+            }
+
+            90% {
+                background-color: violet;
+            }
+
+            100% {
+                background-color: red;
+            }
         }
 
         .rainbow-effect {
@@ -78,11 +101,15 @@
         }
 
         button {
-            background-color: #4CAF50; /* Green background */
-            color: white; /* White text */
-            padding: 15px 32px; /* Top and bottom, Left and right padding */
+            background-color: #4CAF50;
+            /* Green background */
+            color: white;
+            /* White text */
+            padding: 15px 32px;
+            /* Top and bottom, Left and right padding */
         }
 
+        button,
         .buttonish {
             text-align: center;
             text-decoration: none;
@@ -95,14 +122,19 @@
             box-shadow: 0 4px #999;
         }
 
+        button:hover,
         .buttonish:hover {
-            background-color: #45a049; /* Darker shade for hover */
+            background-color: #45a049;
+            /* Darker shade for hover */
         }
 
+        button:hover,
         .buttonish:active {
             background-color: #45a049;
-            box-shadow: 0 2px #666; /* Shadow effect for active state */
-            transform: translateY(4px); /* Slight push down */
+            box-shadow: 0 2px #666;
+            /* Shadow effect for active state */
+            transform: translateY(4px);
+            /* Slight push down */
         }
 
         div.piece {
@@ -111,19 +143,21 @@
             overflow: hidden;
         }
 
-        div.piece > img {
+        div.piece>img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
 
-        .x-piece  {
+        .x-piece {
             border: 2px solid black;
         }
-        .o-piece  {
+
+        .o-piece {
             border: 2px solid red;
         }
-        .x-piece > img {
+
+        .x-piece>img {
             transform: scaleY(-1);
         }
 
@@ -136,21 +170,29 @@
             font-size: 1.5em;
             font-weight: bold;
             margin: 10px;
-            min-height: 1.5em; /* maintain its height even when empty */
+            min-height: 1.5em;
+            /* maintain its height even when empty */
         }
-
-
     </style>
 </head>
 
 <body>
     <h1>ミリオンしょうぎ</h1>
 
-    <div class="status", id="faction-status"></div>
+    <div id="room-interface">
+        <input type="text" id="room-name" placeholder="Enter room name">
+        <button id="create-room">Create Room</button>
+        <button id="join-room">Join Room</button>
+        <button id="leave-room">Leave Room</button>
+    </div>
+
+    <div class="status" id="current-room-info">Current Room: None</div>
+
+    <div class="status" , id="faction-status"></div>
     <div id="faction-choice-container">
         <div id="faction-choice">
-            <button class="buttonish" id="choose-x">山側 (↑)</button>
-            <button class="buttonish" id="choose-o">海側 (↓)</button>
+            <button id="choose-x">山側 (↑)</button>
+            <button id="choose-o">海側 (↓)</button>
         </div>
     </div>
 
@@ -185,14 +227,16 @@
         <div class="cell" data-row=5 data-col=4></div>
     </div>
 
-    <div class="status", id="game-status"></div>
-    <div class="status", id="game-status2"></div>
-    <button class="buttonish" id="reset-button">Reset Game</button>
+    <div class="status" , id="game-status"></div>
+    <div class="status" , id="game-status2"></div>
+    <button id="reset-button">Reset Game</button>
 
 
     <script>
         function updateGameState(gameState) {
             console.log(gameState);
+
+            $('#current-room-name').text(gameState);
 
             let names = {
                 1: 'rook',
@@ -214,7 +258,7 @@
                         var cellSelector = `[data-row="${rowIndex}"][data-col="${colIndex}"]`;
                         var pieceClass = (cell.faction === 'X' ? 'x-piece' : 'o-piece') + ' type' + cell.type;
                         var imageUrl = 'static/' + cell.img;
-                        $(cellSelector).append('<div class="piece buttonish '  + pieceClass + '"><img src="' + imageUrl + '" draggable="false"/></div>');
+                        $(cellSelector).append('<div class="piece buttonish ' + pieceClass + '"><img src="' + imageUrl + '" draggable="false"/></div>');
                     }
                 });
             });
@@ -225,7 +269,7 @@
                 if (current_player == player) {
                     updateStatus('Your turn!', '#00ff00');
                 } else {
-                    updateStatus('Opponent\'s turn!','#ff0000');
+                    updateStatus('Opponent\'s turn!', '#ff0000');
                 }
             }
             else {
@@ -245,7 +289,7 @@
 
         }
 
-        // Function to update game status
+        // game status, the main game status (such as current turn)
         function updateStatus(message, color) {
             $('#game-status').text(message);
             if (color === 'rainbow') {
@@ -258,18 +302,20 @@
             }
         }
 
+        // game status2, used for temporary messages (e.g. invalid move)
         function updateStatus2(message) {
             $('#game-status2').text(message);
             setTimeout(function () {
                 $('#game-status2').text("");
             }, 2000);
         }
-        // http://' + document.domain + ':' + location.port
-        var socket = io.connect({"path": location.pathname + "socket.io"});
+
+        var socket = io.connect({ "path": location.pathname + "socket.io" });
         var selectedCell = null;
         var player = null;
         var current_player = null;
         var game_over = false; // Initialize game_over as false
+        var room = null;
 
         $('.cell').on('click', function () {
             if (!player) {
@@ -286,7 +332,7 @@
                 return;
             }
 
-            updateStatus2('You clicked on' + ' ' + $(this).data('row') + ' ' +  $(this).data('col'));
+            updateStatus2('You clicked on' + ' ' + $(this).data('row') + ' ' + $(this).data('col'));
             if (selectedCell) {
                 if (this === selectedCell) {
                     $(this).removeClass('selected');
@@ -298,9 +344,10 @@
                 socket.emit('make_move', {
                     src: { row: $(selectedCell).data('row'), col: $(selectedCell).data('col') },
                     dst: { row: $(this).data('row'), col: $(this).data('col') },
-                    player: player
+                    player: player,
+                    room: room
                 });
-                $(selectedCell) .removeClass('selected');
+                $(selectedCell).removeClass('selected');
                 $('.cell').removeClass('valid');
                 selectedCell = null;
             } else {
@@ -321,13 +368,14 @@
                 // get valid moves from server
                 socket.emit('get_valid_moves', {
                     src: { row: $(this).data('row'), col: $(this).data('col') },
-                    player: player
+                    player: player,
+                    room: room
                 });
             }
         });
 
         $('#reset-button').on('click', function () {
-            socket.emit('reset_game');
+            socket.emit('reset_game', { room: room });
         });
 
         socket.on('valid_moves', function (validMoves) {
@@ -347,22 +395,47 @@
             // change status2 back to blank after 2 seconds
         });
 
+        socket.on('room_info', function (info) {
+            if (!info.state) {
+                $('#current-room-info').text(`No room "${info.room}" exists. Please create it.`);
+                return
+            }
+            room = info.room;
+            $('#current-room-info').text('Current Room: ' + info.room);
+            updateGameState(info.state);
+            if (!player) {
+                $('#faction-status').text('You are observing. Please choose a faction to play:');
+                $('#faction-choice').show();
+            }
+        });
+
+        $('#choose-x').on('click', function () {
+            player = 'X';
+            $('#faction-status').text('You are 山側 (↑)');
+            $('#faction-choice').hide();
+            socket.emit('request_initial_state', { room: room });
+        });
+
+        $('#choose-o').on('click', function () {
+            player = 'O';
+            $('#faction-status').text('You are 海側 (↓)');
+            $('#faction-choice').hide();
+            socket.emit('request_initial_state', { room: room });
+        });
+
         $(document).ready(function () {
-            socket.emit('request_initial_state');
-            $('#faction-status').text('You are observing. Please choose a faction to play:');
-            $('#choose-x').on('click', function () {
-                player = 'X';
-                $('#faction-status').text('You are 山側 (↑)');
-                $('#faction-choice').hide();
-                socket.emit('request_initial_state');
+            $('#faction-choice').hide();
+
+            $('#create-room').click(function () {
+                socket.emit('create_room', { room: $('#room-name').val() });
             });
 
-            $('#choose-o').on('click', function () {
-                player = 'O';
-                $('#faction-status').text('You are 海側 (↓)');
-                $('#faction-choice').hide();
-                socket.emit('request_initial_state');
+            $('#join-room').click(function () {
+                socket.emit('join', { room: $('#room-name').val() });
             });
+
+            // socket.emit('request_initial_state', {room: room});
+
 
         });
 
