@@ -1,11 +1,11 @@
-import random
+import logging
 
 from flask import Flask, render_template
-from flask_socketio import SocketIO, emit, join_room, leave_room, rooms
 from flask_cors import CORS
-from game import *
-
+from flask_socketio import SocketIO, emit, join_room, leave_room, rooms
 from werkzeug.middleware.proxy_fix import ProxyFix
+
+from game import *
 
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
@@ -78,3 +78,10 @@ def handle_get_valid_moves(data):
 
 if __name__ == '__main__':
     socketio.run(app, debug=True, port=5000)
+else:
+    # Logger settings for gunicorn. See:
+    # https://stackoverflow.com/questions/26578733/why-is-flask-application-not-creating-any-logs-when-hosted-by-gunicorn
+    # https://trstringer.com/logging-flask-gunicorn-the-manageable-way/
+    gunicorn_logger = logging.getLogger('gunicorn.error')
+    app.logger.handlers = gunicorn_logger.handlers
+    app.logger.setLevel(gunicorn_logger.level)
