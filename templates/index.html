@@ -7,7 +7,7 @@
     <title>Million Shougi</title>
     <script src="//cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script type="text/javascript" src="//code.jquery.com/jquery-1.11.1.js"></script>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 
 <body>
@@ -15,14 +15,11 @@
 
     <div id="room-interface">
         <input type="text" id="room-name" placeholder="Enter room name">
-        <button id="create-room">Create Room</button>
         <button id="join-room">Join Room</button>
-        <button id="leave-room">Leave Room</button>
     </div>
 
     <div class="status" id="current-room-info">Current Room: None</div>
-
-    <div class="status" , id="faction-status"></div>
+    <div class="status" id="faction-status"></div>
     <div id="faction-choice-container">
         <div id="faction-choice">
             <button id="choose-x">山側 (↑)</button>
@@ -259,18 +256,13 @@
 
         $(document).ready(function () {
             $('#faction-choice').hide();
-
-            $('#create-room').click(function () {
-                socket.emit('create_room', { room: $('#room-name').val() });
-            });
+            socket.emit('join', { room: "Default" });
 
             $('#join-room').click(function () {
+                // reset faction upon joining a new room
+                player = null;
                 socket.emit('join', { room: $('#room-name').val() });
             });
-
-            // socket.emit('get_state', {room: room});
-
-
         });
 
     </script>

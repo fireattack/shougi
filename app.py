@@ -16,35 +16,20 @@ room_states = {}
 def index():
     return render_template('index.html')
 
-@socketio.on('create_room')
-def create_room(data):
-    room = data['room']
-    if room in room_states:
-        emit('room_info', {'room': room})
-    room_states[room] = initialize_game_state()
-    on_join(data)
-
 @socketio.on('join')
 def on_join(data):
     room = data['room']
     if not room in room_states:
-        emit('room_info', {'room': room, 'state': None})
-    else:
-        join_room(room)
-        state = room_states[room]
-        emit('room_info', {'room': room, 'state': state}, room=room)
-
-@socketio.on('leave')
-def on_leave(data):
-    room = data['room']
-    leave_room(room)
+        room_states[room] = initialize_game_state()
+    join_room(room)
+    state = room_states[room]
+    emit('room_info', {'room': room, 'state': state}, room=room)
 
 # Socket event for resetting the game
 @socketio.on('reset_game')
 def handle_reset_game(data):
     room = data['room']
     room_states[room] = initialize_game_state()
-
     emit('game_state', room_states[room], room=room)
 
 @socketio.on('make_move')

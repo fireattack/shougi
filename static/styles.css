@@ -1,0 +1,173 @@
+:root {
+    --cell-size: 90px;
+}
+
+body {
+    font-family: sans-serif;
+    text-align: center;
+}
+
+.status {
+    text-align: center;
+    font-size: 1em;
+    font-weight: bold;
+    margin: 10px;
+    min-height: 1.5em; /* maintain its height even when empty */
+}
+
+.board {
+    display: grid;
+    grid-gap: 5px;
+    justify-content: center;
+    margin: auto;
+}
+
+#game-board {
+    grid-template-columns: repeat(3, var(--cell-size));
+    grid-template-rows: repeat(4, var(--cell-size));
+}
+
+.reserve {
+    grid-template-columns: repeat(5, var(--cell-size));
+    grid-template-rows: repeat(1, var(--cell-size));
+    margin: 1vh 0 1vh 0;
+}
+
+.cell {
+    width: var(--cell-size);
+    height: var(--cell-size);
+    border: 1px solid #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f0f0f0;
+}
+
+.cell:nth-child(odd) {
+    background-color: #e0e0e0;
+}
+
+.cell.selected {
+    background-color: #ff0;
+}
+
+.cell.valid {
+    background-color: #0f0;
+}
+
+#faction-choice-container {
+    text-align: center;
+}
+
+@keyframes rainbow {
+    0% {
+        background-color: red;
+    }
+
+    15% {
+        background-color: orange;
+    }
+
+    30% {
+        background-color: yellow;
+    }
+
+    45% {
+        background-color: green;
+    }
+
+    60% {
+        background-color: blue;
+    }
+
+    75% {
+        background-color: indigo;
+    }
+
+    90% {
+        background-color: violet;
+    }
+
+    100% {
+        background-color: red;
+    }
+}
+
+.rainbow-effect {
+    animation: rainbow 3s infinite;
+}
+
+button {
+    background-color: #4caf50;
+    /* Green background */
+    color: white;
+    /* White text */
+    padding: 15px 32px;
+    /* Top and bottom, Left and right padding */
+}
+
+button,
+.buttonish {
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border: none;
+    border-radius: 5px;
+    box-shadow: 0 4px #999;
+}
+
+button:hover,
+.buttonish:hover {
+    background-color: #45a049;
+    /* Darker shade for hover */
+}
+
+button:hover,
+.buttonish:active {
+    background-color: #45a049;
+    box-shadow: 0 2px #666;
+    /* Shadow effect for active state */
+    transform: translateY(4px);
+    /* Slight push down */
+}
+
+div.piece {
+    width: calc(var(--cell-size) * 0.8);
+    height: calc(var(--cell-size) * 0.8);
+    overflow: hidden;
+}
+
+div.piece > img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.x-piece {
+    border: 2px solid black;
+}
+
+.o-piece {
+    border: 2px solid red;
+}
+
+.x-piece > img {
+    transform: scaleY(-1);
+}
+
+.type5 {
+    box-shadow: 0 0 3px 2px gold;
+}
+
+@media (max-width: 600px) {
+    * {
+        font-size: 20px;
+    }
+
+    :root {
+        --cell-size: 18vw;
+    }
+}
