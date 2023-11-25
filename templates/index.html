@@ -255,9 +255,7 @@
         });
 
         $(document).ready(function () {
-            $('#faction-choice').hide();
             socket.emit('join', { room: "Default" });
-
             $('#join-room').click(function () {
                 // reset faction upon joining a new room
                 player = null;
