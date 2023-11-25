@@ -1,7 +1,7 @@
 import random
 
 from flask import Flask, render_template
-from flask_socketio import SocketIO, emit, join_room, leave_room
+from flask_socketio import SocketIO, emit, join_room, leave_room, rooms
 from flask_cors import CORS
 from game import *
 
@@ -25,6 +25,9 @@ def on_join(data):
     room = data['room']
     if not room in room_states:
         room_states[room] = initialize_game_state()
+    # leave all rooms before joining the new one
+    for r in rooms():
+        leave_room(r)
     join_room(room)
     state = room_states[room]
     emit('room_info', {'room': room, 'state': state}, room=room)
