@@ -1,1 +1,1 @@
-python app.py --no-debug
+/usr/local/bin/python3.11 app.py --no-debug
