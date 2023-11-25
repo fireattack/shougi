@@ -1,6 +1,6 @@
 import logging
 
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit, join_room, leave_room, rooms
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -27,10 +27,11 @@ def on_join(data):
         room_states[room] = initialize_game_state()
     # leave all rooms before joining the new one
     for r in rooms():
-        leave_room(r)
+        if r != request.sid:
+            leave_room(r)
     join_room(room)
     state = room_states[room]
-    emit('room_info', {'room': room, 'state': state}, room=room)
+    emit('room_info', {'room': room, 'state': state})
 
 # Socket event for resetting the game
 @socketio.on('reset_game')
