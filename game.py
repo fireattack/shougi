@@ -1,5 +1,3 @@
-
-
 def check_winner(game_state):
     # Type 2 is the king.
     # if it is captured, the game is over
@@ -28,21 +26,12 @@ def check_winner(game_state):
     else:
         return None  # No winner yet
 
-def check_draw(board):
-    # Check for a draw on the board
-    return all([cell != '' for cell in board])
-
 def initialize_game_state():
     # Create an empty 3x4 board
-    # Represent the board as a 2D list, each cell can be None or a dictionary with piece info
     board = [[None for _ in range(3)] for _ in range(4)]
-    # reserves
+    # reserves on in row 4 and 5, for X and O respectively
     board.append([None for _ in range(5)])
     board.append([None for _ in range(5)])
-
-    # Define initial positions for the pieces
-    # Top faction (X) pieces
-
     names = {
         1: 'rook',
         2: 'king',
@@ -50,7 +39,7 @@ def initialize_game_state():
         4: 'pawn',
         5: 'pawn (U)'
     }
-
+    # Top faction (X) pieces
     board[0][0] = {'type': '1', 'faction': 'X', 'img': 'rook0.png'}
     board[0][1] = {'type': '2', 'faction': 'X', 'img': 'king0.png'}
     board[0][2] = {'type': '3', 'faction': 'X', 'img': 'bishop0.png'}
@@ -62,7 +51,6 @@ def initialize_game_state():
     board[3][0] = {'type': '3', 'faction': 'O', 'img': 'bishop1.png'}
     board[2][1] = {'type': '4', 'faction': 'O', 'img': 'pawn1.png'}
 
-
     # Other game state variables
     game_state = {
         'board': board,
@@ -70,13 +58,7 @@ def initialize_game_state():
         'game_over': False,
         'winner': None
     }
-
     return game_state
-
-def reset_game():
-    global game_state
-    game_state = initialize_game_state()
-
 
 def is_valid_move(src, dst, player, game_state):
     # Extract row and column for source and destination
@@ -146,13 +128,13 @@ def is_valid_move(src, dst, player, game_state):
     return True
 
 def get_valid_moves(src, player, game_state):
-    valid_targets = []
+    valid_dsts = []
     for row in range(4):
         for col in range(3):
             dst = {'row': row, 'col': col}
             if is_valid_move(src, dst, player, game_state) == True:
-                valid_targets.append(dst)
-    return valid_targets
+                valid_dsts.append(dst)
+    return valid_dsts
 
 def make_move(src, dst, game_state):
     src_row = src['row']

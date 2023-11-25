@@ -43,11 +43,9 @@ def on_leave(data):
 @socketio.on('reset_game')
 def handle_reset_game(data):
     room = data['room']
-    reset_game()
-    emit('game_state', game_state, room=room)
+    room_states[room] = initialize_game_state()
 
-# Assuming you have a function to initialize the game state
-game_state = initialize_game_state()
+    emit('game_state', room_states[room], room=room)
 
 @socketio.on('make_move')
 def handle_make_move(data):
@@ -72,8 +70,8 @@ def handle_make_move(data):
         # Optionally send an error message back to the player
         emit('move_error', {'message': validality})
 
-@socketio.on('request_initial_state')
-def handle_initial_state_request(data):
+@socketio.on('get_state')
+def handle_get_state(data):
     room = data['room']
     emit('game_state', room_states[room], room=room)
 
