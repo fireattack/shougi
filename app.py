@@ -1,4 +1,4 @@
-import logging
+import argparse
 
 from flask import Flask, render_template, request
 from flask_cors import CORS
@@ -78,11 +78,11 @@ def handle_get_valid_moves(data):
     emit('valid_moves', valid_moves)
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True, port=5000)
-else:
-    # Logger settings for gunicorn. See:
-    # https://stackoverflow.com/questions/26578733/why-is-flask-application-not-creating-any-logs-when-hosted-by-gunicorn
-    # https://trstringer.com/logging-flask-gunicorn-the-manageable-way/
-    gunicorn_logger = logging.getLogger('gunicorn.error')
-    app.logger.handlers = gunicorn_logger.handlers
-    app.logger.setLevel(gunicorn_logger.level)
+    argparse = argparse.ArgumentParser(description='Run the game server')
+    argparse.add_argument('--port', type=int, help='port to listen on', default=5000)
+    argparse.add_argument('--no-debug', dest='debug', action='store_false', help='disable debug mode')
+    args = argparse.parse_args()
+
+    print(args)
+
+    socketio.run(app, debug=args.debug, port=args.port)
