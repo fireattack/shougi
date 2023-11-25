@@ -5,7 +5,11 @@ from flask_socketio import SocketIO, emit, join_room, leave_room
 from flask_cors import CORS
 from game import *
 
+from werkzeug.middleware.proxy_fix import ProxyFix
+
 app = Flask(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
+
 app.config['SECRET_KEY'] = 'your_secret_key'
 CORS(app)
 socketio = SocketIO(app, cors_allowed_origins='*')
